@@ -18,7 +18,7 @@ import copy
 import traceback
 from bot_v2 import Bot
 # from stupidbot import Bot2
-import player_final_puru
+import player_puru_1_mar
 
 TIME = 24
 MAX_PTS = 86
@@ -382,7 +382,7 @@ if __name__ == '__main__':
 		obj1 = Random_Player()
 		obj2 = Bot()
 	elif option == '5':
-		obj1 = player_final_puru.Player_final(10)
+		obj1 = player_puru_1_mar.Player8()
 		obj2 = Bot()
 
 	else:

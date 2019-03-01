@@ -7,7 +7,9 @@ class Bot:
 	def __init__(self):
 		self.start = 0
 		self.timeup =0
-		self.time_limit = 10
+		self.time_limit = 23
+
+		self.draw_penalty = -10000
 
 		self.score = {}
 		self.score["corner_block_won"] = 100
@@ -24,13 +26,15 @@ class Bot:
 		return 0 if s=='x' else 1
 
 	def player2marker(self, s):
-		return 0 if s=='x' else 1
+		return 'x' if s==0 else 'o'
 
+	def opp(self, flag):
+		return 'o' if flag =='x' else 'x'
 
 
 	def heuristic(self, flag, board):
 		tot = 0
-
+		oppflag = self.opp(flag)
 
 		# CORNER BIG BLOCKS
 		tmp = int(board.small_boards_status[0][0][0]==flag) + int(board.small_boards_status[0][2][0]==flag) \
@@ -41,11 +45,11 @@ class Bot:
 
 		tot += max(tmp,tmp2)*self.score["corner_block_won"]
 
-		tmp = int(board.small_boards_status[0][0][0]==1-flag) + int(board.small_boards_status[0][2][0]==1-flag) \
-		      + int(board.small_boards_status[0][0][2]==1-flag) + int(board.small_boards_status[0][2][2]==1-flag)
+		tmp = int(board.small_boards_status[0][0][0]==oppflag) + int(board.small_boards_status[0][2][0]==oppflag) \
+		      + int(board.small_boards_status[0][0][2]==oppflag) + int(board.small_boards_status[0][2][2]==oppflag)
 
-		tmp2 = int(board.small_boards_status[1][0][0]==1-flag) + int(board.small_boards_status[1][2][0]==1-flag) \
-		      + int(board.small_boards_status[1][0][2]==1-flag) + int(board.small_boards_status[1][2][2]==1-flag)
+		tmp2 = int(board.small_boards_status[1][0][0]==oppflag) + int(board.small_boards_status[1][2][0]==oppflag) \
+		      + int(board.small_boards_status[1][0][2]==oppflag) + int(board.small_boards_status[1][2][2]==oppflag)
 
 		tot -= max(tmp,tmp2)*self.score["corner_block_won"]
 
@@ -53,7 +57,7 @@ class Bot:
 		tmp = max(int(board.small_boards_status[0][1][1] == flag) , int(board.small_boards_status[1][1][1]==flag))
 		tot += tmp * self.score["centre_block_won"]
 		
-		tmp = max(int(board.small_boards_status[0][1][1] == 1-flag) , int(board.small_boards_status[1][1][1]==1-flag))
+		tmp = max(int(board.small_boards_status[0][1][1] == oppflag) , int(board.small_boards_status[1][1][1]==oppflag))
 		tot -= tmp * self.score["centre_block_won"]
 
 
@@ -67,15 +71,17 @@ class Bot:
 		tot += max(tmp,tmp2)*self.score["edge_block_won"]
 
 
-		tmp = int(board.small_boards_status[0][1][0]==1-flag) + int(board.small_boards_status[0][0][1]==1-flag) \
-		      + int(board.small_boards_status[0][2][1]==1-flag) + int(board.small_boards_status[0][1][2]==1-flag)
+		tmp = int(board.small_boards_status[0][1][0]==oppflag) + int(board.small_boards_status[0][0][1]==oppflag) \
+		      + int(board.small_boards_status[0][2][1]==oppflag) + int(board.small_boards_status[0][1][2]==oppflag)
 
-		tmp2 = int(board.small_boards_status[1][1][0]==1-flag) + int(board.small_boards_status[1][0][1]==1-flag) \
-		      + int(board.small_boards_status[1][2][1]==1-flag) + int(board.small_boards_status[1][1][2]==1-flag)
+		tmp2 = int(board.small_boards_status[1][1][0]==oppflag) + int(board.small_boards_status[1][0][1]==oppflag) \
+		      + int(board.small_boards_status[1][2][1]==oppflag) + int(board.small_boards_status[1][1][2]==oppflag)
 
 		tot -= max(tmp,tmp2)*self.score["edge_block_won"]
 
 		# print("AT HEUR ",tot)
+		# board.print_board()
+
 		return tot
 
 	def update(self, board, old_move, new_move, ply):
@@ -117,9 +123,13 @@ class Bot:
 	def minimax(self, board, player, depth, maxDepth, alpha, beta, old_move, streak):
 
 		isGoal = board.find_terminal_state()
+		
+		if time.time() - self.start > self.time_limit:
+			self.timeup = 1
+			return (self.heuristic(self.player2marker(self.me),board)), -1
 
 		if isGoal[1] == "WON":
-			if marker2player(isGoal[0]) == self.me:
+			if self.marker2player(isGoal[0]) == self.me:
 				return float("inf"),-1
 			else:
 				return float("-inf"),-1
@@ -127,9 +137,6 @@ class Bot:
 		elif isGoal[1] == "DRAW":
 			return self.draw_penalty,-1
 
-		if time.time() - self.start > self.time_limit:
-			self.timeup = 1
-			return (self.heuristic(self.player2marker(self.me),board)), -1
 
 		if depth == maxDepth:
 			return (self.heuristic(self.player2marker(self.me),board)), -1
@@ -139,7 +146,7 @@ class Bot:
 		valid_moves = board.find_valid_move_cells(old_move)
 		moves_sort = []
 		for move in valid_moves:
-			self.update(board,old_move,move,player)
+			self.update(board,old_move,move,self.player2marker(player))
 			util = self.heuristic(self.player2marker(self.me),board)
 			moves_sort.append((util,move))
 			board.big_boards_status[move[0]][move[1]][move[2]] = '-'
@@ -154,11 +161,11 @@ class Bot:
 			valid = [u[1] for u in moves_sort]
 			maxUtility = float("-inf")
 			maxIndex = 0
-			print(valid)
+			# print(valid)
 
 			for i in xrange(len(valid)):
 				move = valid[i]
-				works = self.update(board,old_move,move,player)
+				works = self.update(board,old_move,move,self.player2marker(player))
 
 				childUtility = 0
 				if works and not streak:
@@ -166,8 +173,9 @@ class Bot:
 				else:
 					childUtility = self.minimax(board,1-player, depth+1, maxDepth, alpha, beta, move, 0)[0]
 
-				print("I play ",move," Util ", childUtility)
+				# print(i," I play ",move," Util ", childUtility)
 				if childUtility > maxUtility:
+					# print("its bigger")
 					maxUtility = childUtility
 					maxIndex = i
 
@@ -179,7 +187,7 @@ class Bot:
 				if alpha >= beta:
 					break
 
-			return maxUtility, maxIndex
+			return maxUtility, valid[maxIndex]
 
 		else:
 
@@ -190,13 +198,16 @@ class Bot:
 
 			for i in xrange(len(valid)):
 				move = valid[i]
-				works = self.update(board,old_move,move,player)
+				works = self.update(board,old_move,move,self.player2marker(player))
 
 				childUtility = 0
 				if works and not streak:
 					childUtility = self.minimax(board,player, depth+1, maxDepth, alpha, beta, move, 1)[0]
 				else:
 					childUtility = self.minimax(board,1-player, depth+1, maxDepth, alpha, beta, move, 0)[0]
+
+				# print("He plays ",move," Util ", childUtility)
+				
 
 				if childUtility < minUtility:
 					minUtility = childUtility
@@ -235,14 +246,12 @@ class Bot:
 
 		original_board = copy.deepcopy(board)
 	
-		# while(True):
-		for i in range(1,2):
+		while(True):
+		# for i in range(1,2):
 			# b = copy.deepcopy(board)
-			move = self.minimax(original_board,self.me,0,2,float("-inf"),float("inf"),old_move, False)
+			move = self.minimax(original_board,self.me,0,depth,float("-inf"),float("inf"),old_move, False)
 			# print(move)
-			bestMove = valid[move[1]]
-			heurmax = move[0]
-			heurind = move[1]
+			bestMove = move[1]
 			depth+=1;
 			if(self.timeup):
 				break
@@ -250,8 +259,6 @@ class Bot:
 
 
 		print("Depth ",depth)
-		print("MxIndex ",heurind)
-		print("Heur ", heurmax)
 		print("Smartbot played! ",bestMove)
 		return bestMove	
 
