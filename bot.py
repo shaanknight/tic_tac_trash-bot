@@ -110,7 +110,7 @@ class Bot:
 					alpha = maxVal
 
 				board.big_boards_status[cell[0]][cell[1]][cell[2]] = '-'
-				board.small_boards_status[cell[0]][cell[1]%3][cell[2]%3] = '-'
+				board.small_boards_status[cell[0]][cell[1]/3][cell[2]/3] = '-'
 
 				if beta <= alpha:
 					break
@@ -134,7 +134,7 @@ class Bot:
 					beta = minVal
 
 				board.big_boards_status[cell[0]][cell[1]][cell[2]] = '-'
-				board.small_boards_status[cell[0]][cell[1]%3][cell[2]%3] = '-'
+				board.small_boards_status[cell[0]][cell[1]/3][cell[2]/3] = '-'
 
 				if beta <= alpha:
 					break
@@ -152,7 +152,7 @@ class Bot:
 		self.who = flag
 		depth = 5
 		start = time.time()
-		for i in range(1,depth):
+		for i in xrange(1,depth):
 			b = copy.deepcopy(board)
 			move = self.minimax(b,flag,0,depth,float("-inf"),float("inf"),old_move)
 			# print(move)
@@ -163,7 +163,7 @@ class Bot:
 
 		print ("time ",end-start)
 
-		# print("I played! ",move)
+		print("Smartbot played! ",move)
 		return bestMove	
 
 

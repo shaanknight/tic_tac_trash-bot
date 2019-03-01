@@ -17,6 +17,7 @@ import time
 import copy
 import traceback
 from bot import Bot
+from stupidbot import Bot2
 
 TIME = 24
 MAX_PTS = 86
@@ -157,7 +158,7 @@ class BigBoard:
 			return False
 		cells = self.find_valid_move_cells(old_move)
 		return new_move in cells
-
+		
 	def update(self, old_move, new_move, ply):
 		#updating the game board and small_board status as per the move that has been passed in the arguements
 		if(self.check_valid_move(old_move, new_move)) == False:
@@ -380,7 +381,7 @@ if __name__ == '__main__':
 		obj1 = Random_Player()
 		obj2 = Bot()
 	elif option == '5':
-		obj1 = Manual_Player()
+		obj1 = Bot2()
 		obj2 = Bot()
 
 	else:
