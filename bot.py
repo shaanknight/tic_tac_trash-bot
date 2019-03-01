@@ -5,6 +5,9 @@ import time
 
 class Bot:
 	def __init__(self):
+		self.start = 0
+		self.timeup =0
+
 		self.score = {}
 		self.score["corner_block_won"] = 100
 		self.score["centre_block_won"] = 100
@@ -82,7 +85,8 @@ class Bot:
 		elif isGoal[1] == "DRAW":
 			return -100000, "placeholder"
 
-		if depth == maxDepth:
+		if time.time() - self.start > 23:
+			self.timeup = 1
 			return (self.heuristic(self.who,board)), "placeholder"
 
 		valid = board.find_valid_move_cells(old_move)
@@ -145,23 +149,29 @@ class Bot:
 
 
 	def move(self, board, old_move, flag):
+
+		self.start = time.time()
+		self.timeup = 0
+
 		valid = board.find_valid_move_cells(old_move)
 		# print(valid)
 		bestMove = valid[0]
 
 		self.who = flag
-		depth = 5
-		start = time.time()
-		for i in xrange(1,depth):
+		depth = 1
+	
+		while(True):
 			b = copy.deepcopy(board)
 			move = self.minimax(b,flag,0,depth,float("-inf"),float("inf"),old_move)
 			# print(move)
 			bestMove = move[1]
+			depth+=1;
+			if(self.timeup):
+				break
 			del b
 
 		end = time.time()
 
-		print ("time ",end-start)
 
 		print("Smartbot played! ",move)
 		return bestMove	
