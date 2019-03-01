@@ -89,6 +89,11 @@ class Bot:
 			self.timeup = 1
 			return (self.heuristic(self.who,board)), "placeholder"
 
+		if depth == maxDepth:
+			return (self.heuristic(self.who,board)), "placeholder"
+
+
+
 		valid = board.find_valid_move_cells(old_move)
 
 		isMax = (flag == self.who)
