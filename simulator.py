@@ -16,13 +16,17 @@ import signal
 import time
 import copy
 import traceback
-from bot_v2 import Bot
+import bot_v2
 # from stupidbot import Bot2
 import player_puru_1_mar
 import newbeg1
+import newbeg2
+
 import team7
 import team72v3
 import quick
+import quick2
+import mcts
 
 TIME = 24
 MAX_PTS = 86
@@ -388,10 +392,13 @@ if __name__ == '__main__':
 	elif option == '5':
 		# obj2 = player_puru_1_mar.Player8()
 		# obj2 = newbeg1.Team162()
-		# obj2 = quick.botq()
+		# obj1 = newbeg2.Team162()
+		# obj1 = quick.botq()
+		# obj1 = quick2.botq()
 		obj2 = team72v3.Team72v3()
+		# obj1 = mcts.Bot()
 		# obj2 = team7.Team7()
-		obj1 = Bot()
+		obj1 = bot_v2.Bot()
 
 	else:
 		print 'Invalid option'

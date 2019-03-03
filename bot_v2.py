@@ -8,6 +8,7 @@ class Bot:
 		self.start = 0
 		self.timeup =0
 		self.time_limit = 23
+		self.streak = 0
 
 		self.draw_penalty = -10000
 
@@ -66,7 +67,7 @@ class Bot:
 		return 'o' if flag =='x' else 'x'
 
 
-	def heuristic(self, flag, board, debug = 1):
+	def heuristic(self, flag, board, debug = 0):
 		tot = 0
 		oppflag = self.opp(flag)
 
@@ -192,19 +193,20 @@ class Bot:
 				tot_board_2 -= smalloppscores[1][i][j] * (board.big_boards_status[1][i][j] == oppflag)
 
 		
-		# if debug:
-		# 	print("AT HEUR ", tot_board_1, tot_board_2)
-		# 	board.print_board()
+		if debug:
+			print("AT HEUR ", tot_board_1, tot_board_2)
+			board.print_board()
 
-		if(min(tot_board_1,tot_board_2) < 0):
-			return min(tot_board_1,tot_board_2)
-		else:
-			return max(tot_board_1,tot_board_2)
+		# if(min(tot_board_1,tot_board_2) < 0):
+		# 	return min(tot_board_1,tot_board_2)
+		# else:
+		# 	return max(tot_board_1,tot_board_2)
 
-		# return tot_board_2+tot_board_1
+		return tot_board_2+tot_board_1
 
 
-	def update(self, board, old_move, new_move, ply):
+	def update(self, board, old_move, new_move, player):
+		ply = self.player2marker(player)
 		board.big_boards_status[new_move[0]][new_move[1]][new_move[2]] = ply
 
 		x = new_move[1]/3
@@ -240,119 +242,240 @@ class Bot:
 		board.small_boards_status[k][x][y] = 'd'
 		return False
 
-	def minimax(self, board, player, depth, maxDepth, alpha, beta, old_move, streak):
 
-		isGoal = board.find_terminal_state()
-		
-		if time.time() - self.start > self.time_limit:
-			# print("times up!")
-			self.timeup = 1
-			return (self.heuristic(self.player2marker(self.me),board)), -1
+	def minimax(self, board, maxDepth, old_move, streak):
 
-		if isGoal[1] == "WON":
-			if self.marker2player(isGoal[0]) == self.me:
-				return float("inf"),-1
+		def cut_off(depth):
+			if self.timeup or \
+			   time.time() - self.start >= self.time_limit:
+			    self.timeup = True
+			    return True
+			if depth > maxDepth:
+				return True
+			return False
+
+
+		def maximize(alpha,beta,depth,old_move,streak):
+			isGoal = board.find_terminal_state()
+
+
+			if isGoal[1] == "WON":
+				if self.marker2player(isGoal[0]) == self.me:
+					# board.print_board()
+					return float("inf")
+				else:
+					return float("-inf")
+
+			if cut_off(depth):
+				return self.heuristic(self.player2marker(self.me), board)
+
+			v = float("-inf")
+			actions = board.find_valid_move_cells(old_move)
+			for a in actions:
+				won = self.update(board, old_move, a,self.me)
+				if won and not streak:
+					v = max(v,maximize(alpha,beta,depth+1,a,1))
+				else:
+					v = max(v,minimize(alpha,beta,depth+1,a,0))
+
+
+				board.big_boards_status[a[0]][a[1]][a[2]] = '-'
+				board.small_boards_status[a[0]][a[1]/3][a[2]/3] = '-'
+
+				# print("I played ", a, " util ",v)
+
+				if v>= beta:
+					# print(v," beta breaking ",beta)
+					return v
+
+				alpha = max(alpha,v)
+
+
+			return v
+
+		def minimize(alpha,beta,depth,old_move,streak):
+			isGoal = board.find_terminal_state()
+
+			if isGoal[1] == "WON":
+				if self.marker2player(isGoal[0]) == self.me:
+					return float("inf")
+				else:
+					return float("-inf")
+
+			if cut_off(depth):
+				return self.heuristic(self.player2marker(self.me), board)
+
+
+
+			v = float("inf")
+			actions = board.find_valid_move_cells(old_move)
+			for a in actions:
+				won = self.update(board, old_move, a, 1-self.me)
+				if won and not streak:
+					v = min(v,minimize(alpha,beta,depth+1,a,1))
+				else:
+					v = min(v,maximize(alpha,beta,depth+1,a,0))
+
+				board.big_boards_status[a[0]][a[1]][a[2]] = '-'
+				board.small_boards_status[a[0]][a[1]/3][a[2]/3] = '-'
+
+				# print("He played ", a, " util ",v)
+
+				if v <= alpha:
+					# print(v," alpha breaking",alpha)
+					return v
+
+				beta = min(beta,v)
+
+			return v
+
+		best = float("-inf")
+		beta = float("inf")
+
+		actions = board.find_valid_move_cells(old_move)
+		best_move = actions[0]
+		for a in actions:
+			won = self.update(board, old_move, a, self.me)
+			if won and not streak:
+				v = maximize(best,beta,1,a,1)
 			else:
-				return float("-inf"),-1
+				v = minimize(best,beta,1,a,0)
+			
+			# print("I played ", a, " util ",v)
+			if v > best:
+				# print(v," Improved ",best)
+				best = v
+				best_move = copy.deepcopy(a)
 
-		elif isGoal[1] == "DRAW":
-			return self.draw_penalty,-1
+
+			board.big_boards_status[a[0]][a[1]][a[2]] = '-'
+			board.small_boards_status[a[0]][a[1]/3][a[2]/3] = '-'
+
+			if self.timeup or \
+			   time.time() - self.start >= self.time_limit:
+			    self.timeup = True
+			    break
 
 
-		if depth == maxDepth:
-			# print("returning ")
-			return (self.heuristic(self.player2marker(self.me),board)), -1
+		return best,best_move	
+
+
+
+	# def minimax(self, board, player, depth, maxDepth, alpha, beta, old_move, streak):
+
+	# 	isGoal = board.find_terminal_state()
+		
+	# 	if time.time() - self.start > self.time_limit:
+	# 		# print("times up!")
+	# 		self.timeup = 1
+	# 		return (self.heuristic(self.player2marker(self.me),board)), -1
+
+	# 	if isGoal[1] == "WON":
+	# 		if self.marker2player(isGoal[0]) == self.me:
+	# 			return float("inf"),-1
+	# 		else:
+	# 			return float("-inf"),-1
+
+	# 	elif isGoal[1] == "DRAW":
+	# 		return self.draw_penalty,-1
+
+
+	# 	if depth == maxDepth:
+	# 		# print("returning ")
+	# 		return (self.heuristic(self.player2marker(self.me),board)), -1
 			
 
 
-		valid_moves = board.find_valid_move_cells(old_move)
-		moves_sort = []
-		for move in valid_moves:
-			self.update(board,old_move,move,self.player2marker(player))
-			util = self.heuristic(self.player2marker(self.me),board, 0)
-			moves_sort.append((util,move))
-			board.big_boards_status[move[0]][move[1]][move[2]] = '-'
-			board.small_boards_status[move[0]][move[1]/3][move[2]/3] = '-'
+	# 	valid_moves = board.find_valid_move_cells(old_move)
+	# 	moves_sort = []
+	# 	for move in valid_moves:
+	# 		self.update(board,old_move,move,self.player2marker(player))
+	# 		util = self.heuristic(self.player2marker(self.me),board, 0)
+	# 		moves_sort.append((util,move))
+	# 		board.big_boards_status[move[0]][move[1]][move[2]] = '-'
+	# 		board.small_boards_status[move[0]][move[1]/3][move[2]/3] = '-'
 
 
 
 
-		if player == self.me:
+	# 	if player == self.me:
 		
-			moves_sort.sort(reverse = True)
-			valid = [u[1] for u in moves_sort]
-			maxUtility = float("-inf")
-			maxIndex = 0
-			# print(valid)
+	# 		moves_sort.sort(reverse = True)
+	# 		valid = [u[1] for u in moves_sort]
+	# 		maxUtility = float("-inf")
+	# 		maxIndex = 0
+	# 		# print(valid)
 
-			for i in xrange(len(valid)):
-				move = valid[i]
-				works = self.update(board,old_move,move,self.player2marker(player))
+	# 		for i in xrange(len(valid)):
+	# 			move = valid[i]
+	# 			works = self.update(board,old_move,move,self.player2marker(player))
 
-				childUtility = 0
-				if works and not streak:
-					childUtility = self.minimax(board,player, depth+1, maxDepth, alpha, beta, move, 1)[0]
-				else:
-					childUtility = self.minimax(board,1-player, depth+1, maxDepth, alpha, beta, move, 0)[0]
+	# 			childUtility = 0
+	# 			if works and not streak:
+	# 				childUtility = self.minimax(board,player, depth+1, maxDepth, alpha, beta, move, 1)[0]
+	# 			else:
+	# 				childUtility = self.minimax(board,1-player, depth+1, maxDepth, alpha, beta, move, 0)[0]
 
-				# print(i," I play ",move," Util ", childUtility)
+	# 			# print(i," I play ",move," Util ", childUtility)
 
-				if childUtility > maxUtility:
-					# print(childUtility," is bigger ",maxUtility)
-					maxUtility = childUtility
-					maxIndex = i
+	# 			if childUtility > maxUtility:
+	# 				# print(childUtility," is bigger ",maxUtility)
+	# 				maxUtility = childUtility
+	# 				maxIndex = i
 
-				if childUtility == maxUtility:
-					x = random.randrange(100)
-					if(x<50):
-						maxIndex = i
+	# 			if childUtility == maxUtility:
+	# 				x = random.randrange(100)
+	# 				if(x<50):
+	# 					maxIndex = i
 
-				alpha = max(alpha, maxUtility)
+	# 			alpha = max(alpha, maxUtility)
 
-				board.big_boards_status[move[0]][move[1]][move[2]] = '-'
-				board.small_boards_status[move[0]][move[1]/3][move[2]/3] = '-'
+	# 			board.big_boards_status[move[0]][move[1]][move[2]] = '-'
+	# 			board.small_boards_status[move[0]][move[1]/3][move[2]/3] = '-'
 
-				if alpha > beta:
-					break
+	# 			if alpha > beta:
+	# 				break
 
-			return maxUtility, valid[maxIndex]
+	# 		return maxUtility, valid[maxIndex]
 
-		else:
+	# 	else:
 
-			moves_sort.sort()
-			valid = [u[1] for u in moves_sort]
-			minUtility = float("inf")
-			minIndex = 0
-			# print(valid)
+	# 		moves_sort.sort()
+	# 		valid = [u[1] for u in moves_sort]
+	# 		minUtility = float("inf")
+	# 		minIndex = 0
+	# 		# print(valid)
 
-			for i in xrange(len(valid)):
-				move = valid[i]
-				works = self.update(board,old_move,move,self.player2marker(player))
+	# 		for i in xrange(len(valid)):
+	# 			move = valid[i]
+	# 			works = self.update(board,old_move,move,self.player2marker(player))
 
-				childUtility = 0
-				if works and not streak:
-					childUtility = self.minimax(board,player, depth+1, maxDepth, alpha, beta, move, 1)[0]
-				else:
-					childUtility = self.minimax(board,1-player, depth+1, maxDepth, alpha, beta, move, 0)[0]
+	# 			childUtility = 0
+	# 			if works and not streak:
+	# 				childUtility = self.minimax(board,player, depth+1, maxDepth, alpha, beta, move, 1)[0]
+	# 			else:
+	# 				childUtility = self.minimax(board,1-player, depth+1, maxDepth, alpha, beta, move, 0)[0]
 
-				# print(i," He plays ",move," Util ", childUtility)
+	# 			# print(i," He plays ",move," Util ", childUtility)
 				
 
-				if childUtility < minUtility:
-					# print(childUtility," is smaller ",minUtility)
-					minUtility = childUtility
-					minIndex = i
+	# 			if childUtility < minUtility:
+	# 				# print(childUtility," is smaller ",minUtility)
+	# 				minUtility = childUtility
+	# 				minIndex = i
 
-				beta = min(beta, minUtility)
+	# 			beta = min(beta, minUtility)
 
-				board.big_boards_status[move[0]][move[1]][move[2]] = '-'
-				board.small_boards_status[move[0]][move[1]/3][move[2]/3] = '-'
+	# 			board.big_boards_status[move[0]][move[1]][move[2]] = '-'
+	# 			board.small_boards_status[move[0]][move[1]/3][move[2]/3] = '-'
 
-				if beta < alpha:
-					# print (" beta smaller than equal alpha breaking ")
-					break
+	# 			if beta < alpha:
+	# 				# print (" beta smaller than equal alpha breaking ")
+	# 				break
 
-			return minUtility, -1
+	# 		return minUtility, -1
+
+
 
 
 
@@ -363,33 +486,38 @@ class Bot:
 	def move(self, board, old_move, flag):
 
 		self.start = time.time()
-		self.timeup = 0
+		self.timeup = False
 
 		valid = board.find_valid_move_cells(old_move)
-		# print(valid)
 		bestMove = valid[0]
 		heurmax = 0
 
-
 		self.me = self.marker2player(flag)
 		depth = 1
-
 
 		original_board = copy.deepcopy(board)
 	
 		while(True):
 		# for i in range(1,2):
-			# b = copy.deepcopy(board)
-			move = self.minimax(original_board,self.me,0,depth,float("-inf"),float("inf"),old_move, False)
+			move = self.minimax(original_board, depth, old_move, self.streak)
 			# print(move)
 			if(self.timeup):
 				break
 
-			bestMove = move[1]
+			bestMove = copy.deepcopy(move[1])
 			heurmax = move[0]
 			depth+=1;
-			# del b
 
+		# print("ORIGINAL")
+		# board.print_board()
+		# print("MINE")
+		# original_board.print_board()
+
+		won = self.update(original_board,old_move,bestMove, self.me)
+		if won and self.streak == 0:
+			self.streak = 1
+		else:
+			self.streak = 0
 
 		print("Depth ",depth)
 		print("Heur ",heurmax)
