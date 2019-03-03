@@ -17,17 +17,23 @@ import time
 import copy
 import traceback
 import bot_v2
+import bot_v3
 # from stupidbot import Bot2
 import player_puru_1_mar
 import newbeg1
 import newbeg2
+import gaurav
 
 import team7
+import team47
 import team72v3
+import team72v32
 import quick
 import quick2
 import mcts2
 import kartik
+import kartik2
+import team8
 
 TIME = 24
 MAX_PTS = 86
@@ -397,11 +403,18 @@ if __name__ == '__main__':
 		# obj1 = quick.botq()
 		# obj1 = quick2.botq()
 		# obj1 = team72v3.Team72v3()
+		# obj2 = team72v32.Team72v3()
 		# obj2 = mcts.Bot()
-		obj2 = mcts2.Bot()
+		# obj2 = mcts2.Bot()
+		# obj1 = team8.Player8()
 		# obj1 = kartik.player()
+		# obj2 = kartik2.player()
+		# obj2 = team47.Team47()
 		# obj2 = team7.Team7()
-		obj1 = bot_v2.Bot()
+		# obj2 = gaurav.Bot()
+		# obj2 = bot_v2.Bot()
+		obj1 = bot_v3.Bot()
+		obj2 = bot_v2.Bot()
 
 	else:
 		print 'Invalid option'

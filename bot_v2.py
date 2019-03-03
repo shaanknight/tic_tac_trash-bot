@@ -14,56 +14,87 @@ class Bot:
 
 		self.score = [
 						[
-					    	[100, 50, 100],
-							[50 , 130, 50],
-					    	[100, 50, 100]
+					    	[100, 25, 50],
+							[25 , 130, 25],
+					    	[50, 50, 100]
 					 	],
 					 	[
-					 		[100, 50, 100],
-					  		[50 , 130, 50],
-					  		[100, 50, 100]
-					  	]
+					    	[50, 25, 100],
+							[25 , 130, 25],
+					    	[100, 50, 50]
+					 	],
+					 	
+					 ]
+
+		self.smallscore = [
+							[
+					
+					    	[2,8,3, 1,4,1, 1,6,2],
+					    	[8,1,8, 4,1,4, 6,1,6],
+					    	[3,3,2, 2,2,1, 2,2,1],
+				
+					 
+					    	[1,4,1, 3,10,5, 1,4,1],
+					    	[4,1,4, 10,2,10, 4,1,4],
+					    	[2,2,1, 5,5,3, 2,2,1],
+					 	
+					 
+					    	[1,6,2, 1,6,2, 2,8,3],
+					    	[6,1,6, 6,1,6, 8,1,8],
+					    	[2,2,1, 2,2,1, 3,3,2],
+					 	
+					 		],
+					 		[
+					
+					    	[3,6,1, 2,4,1, 4,8,2],
+					    	[6,1,6, 4,1,4, 8,1,8],
+					    	[1,3,3, 1,2,2, 2,4,4],
+				
+					 
+					    	[2,4,1, 5,10,3, 2,4,1],
+					    	[4,1,4, 10,2,10, 4,1,4],
+					    	[1,2,2, 3,5,5, 1,2,2],
+					 	
+					 
+					    	[4,8,2, 2,6,1, 2,6,1],
+					    	[8,1,8, 6,1,6, 6,1,6],
+					    	[2,4,4, 1,2,2, 1,2,2],
+					 	
+					 		],
+
+					 	
 					 ]
 
 		self.oppscore = [
 						[
-					    	[100, 50, 100],
-							[50 , 130, 50],
-					    	[100, 50, 100]
+					    	[100, 80, 100],
+							[80 , 60, 80],
+					    	[100, 80, 100]
 					 	],
 					 	[
-					 		[100, 50, 100],
-					  		[50 , 130, 50],
-					  		[100, 50, 100]
-					  	]
-					 ]
-
-		self.smallscore = [
-						[
-					    	[10, 8, 10],
-							[8 , 12, 8],
-					    	[10, 8, 10]
+					    	[100, 80, 100],
+							[80 , 60, 80],
+					    	[100, 80, 100]
 					 	],
-					 	[
-					 		[10, 8, 10],
-					  		[8 , 12, 8],
-					  		[10, 8, 10]
-					  	]
 					 ]
 
+
+
+
+		
 		self.smalloppscore = [
 						[
-					    	[10, 8, 10],
-							[8 , 12, 8],
-					    	[10, 8, 10]
+					    	[10, 5, 10],
+							[5 , 13, 5],
+					    	[10, 5, 10]
 					 	],
 					 	[
-					 		[10, 8, 10],
-					  		[8 , 12, 8],
-					  		[10, 8, 10]
-					  	]
+					    	[10, 5, 10],
+							[5 , 13, 5],
+					    	[10, 5, 10]
+					 	],
 					 ]
-
+		
 
 
 		self.decay = {}
@@ -71,7 +102,7 @@ class Bot:
 		self.decay[(0,1)] = [(0,0), (0,2), (1,1), (2,1)]
 		self.decay[(0,2)] = [(0,0), (0,1), (1,2), (2,2), (1,1), (2,0)]
 		self.decay[(1,0)] = [(1,1), (1,2), (0,0), (0,2)]
-		self.decay[(1,1)] = [(i,j) for i in range(3) for j in range(3)]
+		self.decay[(1,1)] = [(i,j) for i in range(3) for j in range(3) if i!=j]
 		self.decay[(1,2)] = [(1,0), (1,1), (0,2), (2,2)]
 		self.decay[(2,0)] = [(0,0), (1,0), (2,1), (2,2), (1,1), (0,2)]
 		self.decay[(2,1)] = [(0,1), (1,1), (2,0), (2,2)]
@@ -98,32 +129,33 @@ class Bot:
 		oppscores = copy.deepcopy(self.score)
 
 
-		smallscores = [[[0 for j in xrange(9)] for i in xrange (9)] for k in xrange (2)]
+		smalloppscores = [[[0 for j in xrange(9)] for i in xrange (9)] for k in xrange (2)]
 		for k in xrange(2):
 			for i in xrange(9):
 				for j in xrange(9):
-					smallscores[k][i][j] = self.score[k][i%3][j%3]/20
+					smalloppscores[k][i][j] = self.smalloppscore[k][i%3][j%3]/20
+
+		smallscores = copy.deepcopy(self.smallscore)
 
 
-		smalloppscores = copy.deepcopy(smallscores)
 
-		for k1 in xrange(0,9,3):
-			for k2 in xrange(0,9,3):
-				for i in xrange(3):
-					for j in xrange(3):
-						if(board.big_boards_status[0][i+k1][j+k2] == oppflag):
-							for k in self.decay[(i,j)]:
-								smallscores[0][k[0]+k1][k[1]+k2] -= 1
-						if(board.big_boards_status[0][i+k1][j+k2] == flag):
-							for k in self.decay[(i,j)]:
-								smalloppscores[0][k[0]+k1][k[1]+k2] -= 1
+		# for k1 in xrange(0,9,3):
+		# 	for k2 in xrange(0,9,3):
+		# 		for i in xrange(3):
+		# 			for j in xrange(3):
+		# 				if(board.big_boards_status[0][i+k1][j+k2] == oppflag):
+		# 					for k in self.decay[(i,j)]:
+		# 						smallscores[0][k[0]+k1][k[1]+k2] -= 1
+		# 				if(board.big_boards_status[0][i+k1][j+k2] == flag):
+		# 					for k in self.decay[(i,j)]:
+		# 						smalloppscores[0][k[0]+k1][k[1]+k2] -= 1
 
-						if(board.big_boards_status[1][i+k1][j+k2] == oppflag):
-							for k in self.decay[(i,j)]:
-								smallscores[1][k[0]+k1][k[1]+k2] -= 1
-						if(board.big_boards_status[1][i+k1][j+k2] == flag):
-							for k in self.decay[(i,j)]:
-								smalloppscores[1][k[0]+k1][k[1]+k2] -= 1
+		# 				if(board.big_boards_status[1][i+k1][j+k2] == oppflag):
+		# 					for k in self.decay[(i,j)]:
+		# 						smallscores[1][k[0]+k1][k[1]+k2] -= 1
+		# 				if(board.big_boards_status[1][i+k1][j+k2] == flag):
+		# 					for k in self.decay[(i,j)]:
+		# 						smalloppscores[1][k[0]+k1][k[1]+k2] -= 1
 
 		for i in xrange(3):
 			for j in xrange(3):
@@ -141,6 +173,21 @@ class Bot:
 					for k in self.decay[(i,j)]:
 						oppscores[1][k[0]][k[1]] -= 10
 
+		for i in xrange(3):
+			for j in xrange(3):
+				if(board.small_boards_status[0][i][j] == flag):
+					for k in self.decay[(i,j)]:
+						scores[0][k[0]][k[1]] += 20
+				if(board.small_boards_status[0][i][j] == oppflag):
+					for k in self.decay[(i,j)]:
+						oppscores[0][k[0]][k[1]] += 20
+
+				if(board.small_boards_status[1][i][j] == flag):
+					for k in self.decay[(i,j)]:
+						scores[1][k[0]][k[1]] += 20
+				if(board.small_boards_status[1][i][j] == oppflag):
+					for k in self.decay[(i,j)]:
+						oppscores[1][k[0]][k[1]] += 20
 
 
 
