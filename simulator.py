@@ -388,8 +388,8 @@ if __name__ == '__main__':
 	elif option == '5':
 		# obj2 = player_puru_1_mar.Player8()
 		# obj2 = newbeg1.Team162()
-		obj2 = quick.botq()
-		# obj2 = team72v3.Team72v3()
+		# obj2 = quick.botq()
+		obj2 = team72v3.Team72v3()
 		# obj2 = team7.Team7()
 		obj1 = Bot()
 

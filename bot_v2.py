@@ -53,23 +53,6 @@ class Bot:
 		self.decay[(2,1)] = [(0,1), (1,1), (2,0), (2,2)]
 		self.decay[(2,2)] = [(0,0), (1,1), (0,2), (1,2), (2,0), (2,1)]
 
-
-
-
-		
-		# self.score["corner_cell_won"] = 10
-		# self.score["centre_cell_won"] = 10
-		# self.score["edge_cell_won"] = 5
-
-		# self.triplets = [[[0,0],[0,1],[0,2]], 
-		# 				[[1,0],[1,1],[1,2]], 
-		# 				[[2,0],[2,1],[2,2]],
-		# 				[[0,0],[1,0],[2,0]],
-		# 				[[0,1],[1,1],[2,1]],
-		# 				[[0,2],[1,2],[2,2]],
-		# 				[[0,0],[1,1],[2,2]],
-		# 				[[0,2],[1,1],[2,0]]]
-		
 		
 		print("hello")
 
@@ -135,7 +118,32 @@ class Bot:
 		oppscores = copy.deepcopy(self.score)
 
 
+		smallscores = [[[0 for j in xrange(9)] for i in xrange (9)] for k in xrange (2)]
+		for k in xrange(2):
+			for i in xrange(9):
+				for j in xrange(9):
+					smallscores[k][i][j] = self.score[k][i%3][j%3]/20
 
+
+		smalloppscores = copy.deepcopy(smallscores)
+
+		for k1 in xrange(0,9,3):
+			for k2 in xrange(0,9,3):
+				for i in xrange(3):
+					for j in xrange(3):
+						if(board.big_boards_status[0][i+k1][j+k2] == oppflag):
+							for k in self.decay[(i,j)]:
+								smallscores[0][k[0]+k1][k[1]+k2] -= 1
+						if(board.big_boards_status[0][i+k1][j+k2] == flag):
+							for k in self.decay[(i,j)]:
+								smalloppscores[0][k[0]+k1][k[1]+k2] -= 1
+
+						if(board.big_boards_status[1][i+k1][j+k2] == oppflag):
+							for k in self.decay[(i,j)]:
+								smallscores[1][k[0]+k1][k[1]+k2] -= 1
+						if(board.big_boards_status[1][i+k1][j+k2] == flag):
+							for k in self.decay[(i,j)]:
+								smalloppscores[1][k[0]+k1][k[1]+k2] -= 1
 
 		for i in xrange(3):
 			for j in xrange(3):
@@ -156,24 +164,43 @@ class Bot:
 
 
 
+
 		tot_board_1 = 0
+
+		for i in xrange(9):
+			for j in xrange(9):
+				tot_board_1 += smallscores[0][i][j] * (board.big_boards_status[0][i][j] == flag)
+				tot_board_1 -= smalloppscores[0][i][j] * (board.big_boards_status[0][i][j] == oppflag)
+
+
+				
+
 		for i in xrange(3):
 			for j in xrange(3):
 				tot_board_1 += scores[0][i][j] * (board.small_boards_status[0][i][j] == flag)
 				tot_board_1 -= oppscores[0][i][j] * (board.small_boards_status[0][i][j] == oppflag)
-
 		tot_board_2 = 0
+
 		for i in xrange(3):
 			for j in xrange(3):
 				tot_board_2 += scores[1][i][j] * (board.small_boards_status[1][i][j] == flag)
 				tot_board_2 -= oppscores[1][i][j] * (board.small_boards_status[1][i][j] == oppflag)
+
+		for i in xrange(9):
+			for j in xrange(9):
+				tot_board_2 += smallscores[1][i][j] * (board.big_boards_status[1][i][j] == flag)
+				tot_board_2 -= smalloppscores[1][i][j] * (board.big_boards_status[1][i][j] == oppflag)
 
 		
 		# if debug:
 		# 	print("AT HEUR ", tot_board_1, tot_board_2)
 		# 	board.print_board()
 
-		return min(tot_board_1,tot_board_2)
+		if(min(tot_board_1,tot_board_2) < 0):
+			return min(tot_board_1,tot_board_2)
+		else:
+			return max(tot_board_1,tot_board_2)
+
 		# return tot_board_2+tot_board_1
 
 
@@ -224,7 +251,6 @@ class Bot:
 
 		if isGoal[1] == "WON":
 			if self.marker2player(isGoal[0]) == self.me:
-				board.print_board()
 				return float("inf"),-1
 			else:
 				return float("-inf"),-1
