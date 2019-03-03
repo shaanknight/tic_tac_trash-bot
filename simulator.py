@@ -26,7 +26,8 @@ import team7
 import team72v3
 import quick
 import quick2
-import mcts
+import mcts2
+import kartik
 
 TIME = 24
 MAX_PTS = 86
@@ -395,8 +396,10 @@ if __name__ == '__main__':
 		# obj1 = newbeg2.Team162()
 		# obj1 = quick.botq()
 		# obj1 = quick2.botq()
-		obj2 = team72v3.Team72v3()
-		# obj1 = mcts.Bot()
+		# obj1 = team72v3.Team72v3()
+		# obj2 = mcts.Bot()
+		obj2 = mcts2.Bot()
+		# obj1 = kartik.player()
 		# obj2 = team7.Team7()
 		obj1 = bot_v2.Bot()
 

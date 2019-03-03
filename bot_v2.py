@@ -12,20 +12,15 @@ class Bot:
 
 		self.draw_penalty = -10000
 
-		# self.score = {}
-		# self.score["corner_block_won"] = 100
-		# self.score["centre_block_won"] = 100
-		# self.score["edge_block_won"] = 50
-
 		self.score = [
 						[
 					    	[100, 50, 100],
-							[50 , 150, 50],
+							[50 , 130, 50],
 					    	[100, 50, 100]
 					 	],
 					 	[
 					 		[100, 50, 100],
-					  		[50 , 150, 50],
+					  		[50 , 130, 50],
 					  		[100, 50, 100]
 					  	]
 					 ]
@@ -33,15 +28,43 @@ class Bot:
 		self.oppscore = [
 						[
 					    	[100, 50, 100],
-							[50 , 150, 50],
+							[50 , 130, 50],
 					    	[100, 50, 100]
 					 	],
 					 	[
 					 		[100, 50, 100],
-					  		[50 , 150, 50],
+					  		[50 , 130, 50],
 					  		[100, 50, 100]
 					  	]
 					 ]
+
+		self.smallscore = [
+						[
+					    	[10, 8, 10],
+							[8 , 12, 8],
+					    	[10, 8, 10]
+					 	],
+					 	[
+					 		[10, 8, 10],
+					  		[8 , 12, 8],
+					  		[10, 8, 10]
+					  	]
+					 ]
+
+		self.smalloppscore = [
+						[
+					    	[10, 8, 10],
+							[8 , 12, 8],
+					    	[10, 8, 10]
+					 	],
+					 	[
+					 		[10, 8, 10],
+					  		[8 , 12, 8],
+					  		[10, 8, 10]
+					  	]
+					 ]
+
+
 
 		self.decay = {}
 		self.decay[(0,0)] = [(0,1), (0,2), (1,0), (2,0), (1,1), (2,2)]
@@ -70,50 +93,6 @@ class Bot:
 	def heuristic(self, flag, board, debug = 0):
 		tot = 0
 		oppflag = self.opp(flag)
-
-		# # CORNER BIG BLOCKS
-		# tmp = int(board.small_boards_status[0][0][0]==flag) + int(board.small_boards_status[0][2][0]==flag) \
-		#       + int(board.small_boards_status[0][0][2]==flag) + int(board.small_boards_status[0][2][2]==flag)
-
-		# tmp2 = int(board.small_boards_status[1][0][0]==flag) + int(board.small_boards_status[1][2][0]==flag) \
-		#       + int(board.small_boards_status[1][0][2]==flag) + int(board.small_boards_status[1][2][2]==flag)
-
-		# tot += max(tmp,tmp2)*self.score["corner_block_won"]
-
-		# tmp = int(board.small_boards_status[0][0][0]==oppflag) + int(board.small_boards_status[0][2][0]==oppflag) \
-		#       + int(board.small_boards_status[0][0][2]==oppflag) + int(board.small_boards_status[0][2][2]==oppflag)
-
-		# tmp2 = int(board.small_boards_status[1][0][0]==oppflag) + int(board.small_boards_status[1][2][0]==oppflag) \
-		#       + int(board.small_boards_status[1][0][2]==oppflag) + int(board.small_boards_status[1][2][2]==oppflag)
-
-		# tot -= max(tmp,tmp2)*self.score["corner_block_won"]
-
-		# # CENTER
-		# tmp = max(int(board.small_boards_status[0][1][1] == flag) , int(board.small_boards_status[1][1][1]==flag))
-		# tot += tmp * self.score["centre_block_won"]
-		
-		# tmp = max(int(board.small_boards_status[0][1][1] == oppflag) , int(board.small_boards_status[1][1][1]==oppflag))
-		# tot -= tmp * self.score["centre_block_won"]
-
-
-		# # EDGE 
-		# tmp = int(board.small_boards_status[0][1][0]==flag) + int(board.small_boards_status[0][0][1]==flag) \
-		#       + int(board.small_boards_status[0][2][1]==flag) + int(board.small_boards_status[0][1][2]==flag)
-
-		# tmp2 = int(board.small_boards_status[1][1][0]==flag) + int(board.small_boards_status[1][0][1]==flag) \
-		#       + int(board.small_boards_status[1][2][1]==flag) + int(board.small_boards_status[1][1][2]==flag)
-
-		# tot += max(tmp,tmp2)*self.score["edge_block_won"]
-
-
-		# tmp = int(board.small_boards_status[0][1][0]==oppflag) + int(board.small_boards_status[0][0][1]==oppflag) \
-		#       + int(board.small_boards_status[0][2][1]==oppflag) + int(board.small_boards_status[0][1][2]==oppflag)
-
-		# tmp2 = int(board.small_boards_status[1][1][0]==oppflag) + int(board.small_boards_status[1][0][1]==oppflag) \
-		#       + int(board.small_boards_status[1][2][1]==oppflag) + int(board.small_boards_status[1][1][2]==oppflag)
-
-		# tot -= max(tmp,tmp2)*self.score["edge_block_won"]
-
 
 		scores = copy.deepcopy(self.score)
 		oppscores = copy.deepcopy(self.score)
@@ -270,7 +249,19 @@ class Bot:
 				return self.heuristic(self.player2marker(self.me), board)
 
 			v = float("-inf")
-			actions = board.find_valid_move_cells(old_move)
+
+			valid_moves = board.find_valid_move_cells(old_move)
+			moves_sort = []
+			for move in valid_moves:
+				self.update(board,old_move,move,self.player2marker(self.me))
+				util = self.heuristic(self.player2marker(self.me),board, 0)
+				moves_sort.append((util,move))
+				board.big_boards_status[move[0]][move[1]][move[2]] = '-'
+				board.small_boards_status[move[0]][move[1]/3][move[2]/3] = '-'
+
+			moves_sort.sort(reverse = True)
+			actions = [u[1] for u in moves_sort]			
+
 			for a in actions:
 				won = self.update(board, old_move, a,self.me)
 				if won and not streak:
@@ -308,7 +299,19 @@ class Bot:
 
 
 			v = float("inf")
-			actions = board.find_valid_move_cells(old_move)
+			
+			valid_moves = board.find_valid_move_cells(old_move)
+			moves_sort = []
+			for move in valid_moves:
+				self.update(board,old_move,move,self.player2marker(1-self.me))
+				util = self.heuristic(self.player2marker(self.me),board, 0)
+				moves_sort.append((util,move))
+				board.big_boards_status[move[0]][move[1]][move[2]] = '-'
+				board.small_boards_status[move[0]][move[1]/3][move[2]/3] = '-'
+
+			moves_sort.sort()
+			actions = [u[1] for u in moves_sort]			
+
 			for a in actions:
 				won = self.update(board, old_move, a, 1-self.me)
 				if won and not streak:
@@ -332,7 +335,18 @@ class Bot:
 		best = float("-inf")
 		beta = float("inf")
 
-		actions = board.find_valid_move_cells(old_move)
+		valid_moves = board.find_valid_move_cells(old_move)
+		moves_sort = []
+		for move in valid_moves:
+			self.update(board,old_move,move,self.player2marker(self.me))
+			util = self.heuristic(self.player2marker(self.me),board, 0)
+			moves_sort.append((util,move))
+			board.big_boards_status[move[0]][move[1]][move[2]] = '-'
+			board.small_boards_status[move[0]][move[1]/3][move[2]/3] = '-'
+
+		moves_sort.sort(reverse = True)
+		actions = [u[1] for u in moves_sort]			
+
 		best_move = actions[0]
 		for a in actions:
 			won = self.update(board, old_move, a, self.me)
