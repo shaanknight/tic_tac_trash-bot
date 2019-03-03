@@ -19,6 +19,10 @@ import traceback
 from bot_v2 import Bot
 # from stupidbot import Bot2
 import player_puru_1_mar
+import newbeg1
+import team7
+import team72v3
+import quick
 
 TIME = 24
 MAX_PTS = 86
@@ -382,8 +386,12 @@ if __name__ == '__main__':
 		obj1 = Random_Player()
 		obj2 = Bot()
 	elif option == '5':
-		obj1 = player_puru_1_mar.Player8()
-		obj2 = Bot()
+		# obj2 = player_puru_1_mar.Player8()
+		# obj2 = newbeg1.Team162()
+		obj2 = quick.botq()
+		# obj2 = team72v3.Team72v3()
+		# obj2 = team7.Team7()
+		obj1 = Bot()
 
 	else:
 		print 'Invalid option'
