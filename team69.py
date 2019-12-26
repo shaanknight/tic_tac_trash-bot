@@ -3,7 +3,7 @@ import random
 import copy
 import time
 
-class Bot:
+class Team69:
 	def __init__(self):
 		self.start = 0
 		self.timeup =0
@@ -43,7 +43,7 @@ class Bot:
 		self.decay[(2,2)] = [(0,0), (1,1), (0,2), (1,2), (2,0), (2,1)]
 
 		
-		print("hello")
+		# print("hello")
 
 	def marker2player(self, s):
 		return 0 if s=='x' else 1
@@ -70,7 +70,7 @@ class Bot:
 			elif p.count(flag) == 1:
 				cnt1+=1
 
-		return 20*cnt2 + 10*cnt1
+		return 100*cnt2 + 20*cnt1
 
 
 	def heuristic(self, flag, board, debug = 0):
@@ -407,10 +407,10 @@ class Bot:
 		else:
 			self.streak = 0
 
-		print("Nodes ",self.viscnt)
-		print("Depth ",depth)
-		print("Heur ",heurmax)
-		print("Smartbot played! ",bestMove)
+		# print("Nodes ",self.viscnt)
+		# print("Depth ",depth)
+		# print("Heur ",heurmax)
+		# print("Smartbot played! ",bestMove)
 		return bestMove	
 
 
