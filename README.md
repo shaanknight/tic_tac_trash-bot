@@ -1,4 +1,5 @@
 # Tic-Tac-Trash Bot
+### Contributors : C Athreya, Sayantan Jana 
 A bot that plays a variation of ultimate tic tac toe, called Xtreme tic tac toe. The details of the game and the rules can be found in `Description.pdf`. 
 
 The project was created for the course on Artificial Intelligence in Spring 2019. The bot placed 5th among 74 bots in an intra-batch tournament. Analysis of a few games can be found in `Analysis.pdf`. The rules for the tournament can also be found in `Description.pdf`.
